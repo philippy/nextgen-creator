@@ -1,8 +1,12 @@
 from django.urls import path
 
-from . import content_views, views
+from . import calendar_views, content_views, views
 
 urlpatterns = [
+    path("configuracoes/google/conectar/", calendar_views.start, name="google_start"),
+    path("configuracoes/google/retorno/", calendar_views.callback, name="google_callback"),
+    path("configuracoes/google/desconectar/", calendar_views.disconnect, name="google_disconnect"),
+    path("tarefas/<int:pk>/google/", calendar_views.send, name="google_send"),
     path("ideias/", content_views.ideas, name="ideas"),
     path("ideias/nova/", content_views.idea_form, name="idea_create"),
     path("ideias/<int:pk>/editar/", content_views.idea_form, name="idea_edit"),

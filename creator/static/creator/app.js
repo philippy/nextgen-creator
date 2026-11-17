@@ -1,4 +1,6 @@
-const firstError = document.querySelector(".invalid input, .invalid select, .invalid textarea, .field-errors");
+const firstError = document.querySelector(
+  ".invalid input, .invalid select, .invalid textarea, .field-errors",
+);
 if (firstError) firstError.focus();
 
 const editor = document.querySelector("[data-script-editor]");
@@ -8,8 +10,12 @@ if (editor) {
   const previewError = editor.querySelector("[data-preview-error]");
   const body = editor.elements.body;
   let dirty = false;
-  editor.addEventListener("input", () => { dirty = true; });
-  editor.addEventListener("submit", () => { dirty = false; });
+  editor.addEventListener("input", () => {
+    dirty = true;
+  });
+  editor.addEventListener("submit", () => {
+    dirty = false;
+  });
   window.addEventListener("beforeunload", (event) => {
     if (dirty) {
       event.preventDefault();
@@ -31,18 +37,27 @@ if (editor) {
     try {
       const data = new URLSearchParams();
       data.set("body", body.value);
-      data.set("csrfmiddlewaretoken", editor.elements.csrfmiddlewaretoken.value);
-      const response = await fetch(editor.dataset.previewUrl, { method: "POST", body: data });
-      if (!response.ok || response.redirected) throw new Error("Falha na prévia");
+      data.set(
+        "csrfmiddlewaretoken",
+        editor.elements.csrfmiddlewaretoken.value,
+      );
+      const response = await fetch(editor.dataset.previewUrl, {
+        method: "POST",
+        body: data,
+      });
+      if (!response.ok || response.redirected)
+        throw new Error("Falha na prévia");
       preview.innerHTML = await response.text();
-      if (!preview.textContent.trim()) preview.textContent = "Nenhum texto para visualizar.";
+      if (!preview.textContent.trim())
+        preview.textContent = "Nenhum texto para visualizar.";
       body.hidden = true;
       body.after(preview);
       preview.hidden = false;
       previewButton.textContent = "Editar texto";
       previewButton.setAttribute("aria-pressed", "true");
     } catch {
-      previewError.textContent = "Não foi possível gerar a prévia. Tente novamente.";
+      previewError.textContent =
+        "Não foi possível gerar a prévia. Tente novamente.";
       previewError.hidden = false;
     } finally {
       previewButton.disabled = false;
@@ -66,7 +81,12 @@ if (editor) {
     if (format === "bold") text = "**" + (selected || "texto") + "**";
     if (format === "heading") text = lineBreak + "## " + (selected || "Título");
     if (format === "list") {
-      text = lineBreak + (selected || "Item").split("\n").map((line) => "- " + line).join("\n");
+      text =
+        lineBreak +
+        (selected || "Item")
+          .split("\n")
+          .map((line) => "- " + line)
+          .join("\n");
     }
     body.setRangeText(text, start, end, "end");
     body.dispatchEvent(new Event("input", { bubbles: true }));
@@ -77,10 +97,11 @@ if (editor) {
   const imagePreview = editor.querySelector("[data-thumb-preview]");
   if (imageField && imagePreview) {
     let previewUrl;
-    imageField.addEventListener("change", () => {
+    const updateImagePreview = () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       const file = imageField.files[0];
-      const canPreview = file && ["image/png", "image/jpeg"].includes(file.type);
+      const canPreview =
+        file && ["image/png", "image/jpeg"].includes(file.type);
       if (canPreview) {
         previewUrl = URL.createObjectURL(file);
         imagePreview.src = previewUrl;
@@ -88,6 +109,8 @@ if (editor) {
         imagePreview.removeAttribute("src");
       }
       imagePreview.hidden = !canPreview;
-    });
+    };
+    imageField.addEventListener("change", updateImagePreview);
+    if (imageField.files.length) updateImagePreview();
   }
 }

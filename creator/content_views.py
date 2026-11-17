@@ -1,4 +1,5 @@
 from pathlib import Path
+from unicodedata import normalize
 
 from django.contrib import messages
 from django.db import transaction
@@ -82,12 +83,13 @@ def scripts(request):
     title = request.GET.get("busca", "").strip()
     tag = request.GET.get("assunto", "")
     format_value = request.GET.get("formato", "")
-    if title:
-        filtered = filtered.filter(title__icontains=title)
     if tag:
         filtered = filtered.filter(tags__key=tag)
     if format_value:
         filtered = filtered.filter(format=format_value)
+    if title:
+        query = normalize("NFKC", title).casefold()
+        filtered = [script for script in filtered if query in normalize("NFKC", script.title).casefold()]
     return render(request, "creator/scripts.html", {
         "section": "scripts", "scripts": filtered, "tags": Tag.objects.all(), "formats": Script.Format.choices,
         "search": title, "selected_tag": tag, "selected_format": format_value,

@@ -18,6 +18,9 @@ class Task(models.Model):
     instructions = models.TextField("Instruções", blank=True)
     learning = models.TextField("Nota de aprendizado", blank=True)
     done = models.BooleanField(default=False)
+    google_calendar_id = models.CharField(max_length=1024, blank=True)
+    google_event_url = models.URLField(max_length=2048, blank=True)
+    google_send_failed = models.BooleanField(default=False)
     script = models.ForeignKey("Script", blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Roteiro vinculado")
 
     class Meta:
@@ -46,6 +49,9 @@ class WorkspaceSettings(models.Model):
     channel_themes = models.TextField("Temas", blank=True)
     channel_voice = models.TextField("Tom de voz", blank=True)
     approval_checklist = models.TextField("Checklist de aprovação", blank=True)
+    calendar_marker = models.UUIDField(default=uuid4, editable=False)
+    google_calendar_id = models.CharField(max_length=1024, blank=True)
+    google_refresh_token = models.TextField(blank=True)
 
     @classmethod
     def current(cls):

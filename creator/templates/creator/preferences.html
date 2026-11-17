@@ -1,0 +1,27 @@
+{% extends 'creator/base.html' %}
+{% block title %}Configurações · Nextgen Creator{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Configurações</h1></div>
+<div class="work-stack">
+  <section class="surface form-panel">
+    <div class="section-heading"><h2>Planejamento semanal</h2></div>
+    <form method="post" novalidate>{% csrf_token %}
+      {% include 'creator/fields.html' %}
+      <div class="actions"><button class="button primary">Salvar meta</button></div>
+    </form>
+  </section>
+  <section class="surface detail-panel">
+    <div class="section-heading"><div><h2>Google Calendar</h2>
+    {% if not google_configured %}<p>Integração ainda não configurada no servidor.</p>
+    {% elif google_connected %}<p>Conectado à agenda Nextgen Creator.</p>
+    {% else %}<p>Conecte o Google para adicionar tarefas com horário à agenda Nextgen Creator.</p>{% endif %}</div></div>
+    {% if google_configured %}
+    {% if google_connected %}
+      <form method="post" action="{% url 'google_disconnect' %}">{% csrf_token %}<button class="button secondary">Desconectar</button></form>
+    {% else %}
+      <form method="post" action="{% url 'google_start' %}">{% csrf_token %}<button class="button primary">Conectar Google Calendar</button></form>
+    {% endif %}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

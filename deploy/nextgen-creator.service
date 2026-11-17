@@ -1,0 +1,22 @@
+[Unit]
+Description=Nextgen Creator
+After=network.target
+
+[Service]
+Type=simple
+User=nextgen
+Group=nextgen
+WorkingDirectory=/opt/nextgen-creator
+EnvironmentFile=/opt/nextgen-creator/.env
+StateDirectory=nextgen-creator
+StateDirectoryMode=0700
+ExecStart=/opt/nextgen-creator/.venv/bin/gunicorn --workers 1 --bind 127.0.0.1:8031 --timeout 45 config.wsgi:application
+Restart=on-failure
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -10,7 +10,22 @@
     {% include 'creator/task_status.html' %}
   </div>
   {% if task.script %}<section class="detail-section"><h2>Roteiro vinculado</h2><p>{{ task.script.title }}</p><a class="text-link" href="{{ task.script.get_absolute_url }}">Abrir roteiro {% include 'creator/icon.html' with name='arrow' %}</a></section>{% endif %}
-  {% block calendar %}{% endblock %}
+  {% if task.time or task.google_event_url or task.google_send_failed %}
+  <section class="detail-section calendar-section">
+    <div><h2>Google Calendar</h2>
+      {% if task.google_event_url %}<p class="muted">Ajustes no evento podem ser feitos no Google Calendar.</p>
+      {% elif task.google_send_failed %}<p class="muted">O envio anterior falhou. A tarefa segue disponível.</p>
+      {% elif not google_connected %}<p class="muted">Conecte sua conta para enviar esta tarefa.</p>{% endif %}
+    </div>
+    {% if task.google_event_url %}
+      <a class="button secondary" href="{{ task.google_event_url }}" target="_blank" rel="noopener noreferrer">Abrir no Google Calendar {% include 'creator/icon.html' with name='arrow' %}</a>
+    {% elif google_connected and task.time %}
+      <form method="post" action="{% url 'google_send' task.pk %}">{% csrf_token %}<button class="button secondary">{% if task.google_send_failed %}Tentar novamente{% else %}Adicionar ao Google Calendar{% endif %}</button></form>
+    {% elif not google_connected %}
+      <a class="button secondary" href="{% url 'preferences' %}">Configurar conexão</a>
+    {% endif %}
+  </section>
+  {% endif %}
   {% if task.objective %}<section class="detail-section"><h2>Objetivo</h2>{{ task.objective|linebreaks }}</section>{% endif %}
   {% if task.instructions %}<section class="detail-section"><h2>Instruções</h2>{{ task.instructions|linebreaks }}</section>{% endif %}
   {% if task.learning %}<section class="detail-section"><h2>Nota de aprendizado</h2>{{ task.learning|linebreaks }}</section>{% endif %}

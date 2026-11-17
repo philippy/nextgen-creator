@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 
+from . import google_calendar
 from .forms import FocusForm, RescheduleForm, SettingsForm, TaskForm
 from .models import Script, Task, WeekFocus, WorkspaceSettings
 
@@ -104,8 +105,10 @@ def edit_focus(request, monday):
 
 def task_detail(request, pk):
     task = get_object_or_404(Task.objects.select_related("script"), pk=pk)
+    workspace = WorkspaceSettings.current()
     return render(request, "creator/task_detail.html", {
         "section": "agenda", "task": task, "return_to": safe_return(request, week_url(monday_of(task.date))),
+        "google_connected": bool(google_calendar.is_configured() and workspace.google_refresh_token and workspace.google_calendar_id),
     })
 
 
@@ -139,7 +142,11 @@ def task_form(request, pk=None, reschedule=False):
 @require_POST
 def task_status(request, pk):
     task = get_object_or_404(Task, pk=pk)
-    done = request.POST.get("done") == "1"
+    state = request.POST.get("done")
+    if state not in {"0", "1"}:
+        messages.error(request, "Não foi possível atualizar o estado da tarefa.")
+        return redirect(safe_return(request, task.get_absolute_url()))
+    done = state == "1"
     Task.objects.filter(pk=pk).update(done=done)
     messages.success(request, "Tarefa concluída." if done else "Tarefa reaberta.")
     return redirect(safe_return(request, task.get_absolute_url()))
@@ -147,11 +154,14 @@ def task_status(request, pk):
 
 @require_http_methods(["GET", "POST"])
 def preferences(request):
-    form = SettingsForm(request.POST if request.method == "POST" else None, instance=WorkspaceSettings.current())
+    workspace = WorkspaceSettings.current()
+    form = SettingsForm(request.POST if request.method == "POST" else None, instance=workspace)
     if request.method == "POST" and form.is_valid():
         form.save(commit=False).save(update_fields=SettingsForm.Meta.fields)
         messages.success(request, "Configurações salvas.")
         return redirect("preferences")
-    return render(request, "creator/form.html", {
-        "section": "preferences", "title": "Configurações", "form": form, "return_to": reverse("today"),
+    return render(request, "creator/preferences.html", {
+        "section": "preferences", "form": form,
+        "google_configured": google_calendar.is_configured(),
+        "google_connected": bool(workspace.google_refresh_token and workspace.google_calendar_id),
     })

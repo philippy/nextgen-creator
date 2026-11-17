@@ -49,6 +49,11 @@ class ContentFlowTests(TestCase):
         self.client.post(route, {"restore": "1"})
         self.assertContains(self.client.get(reverse("ideas")), idea.title)
 
+    def test_portuguese_title_search_ignores_case(self):
+        Script.objects.create(title="Consciência no cotidiano", format="short")
+        response = self.client.get(reverse("scripts"), {"busca": "CONSCIÊNCIA"})
+        self.assertContains(response, "Consciência no cotidiano")
+
     def test_models_and_safe_preview(self):
         for format_value, heading in [
             ("short", "Gancho"), ("long", "Promessa"),

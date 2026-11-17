@@ -6,3 +6,4 @@ __pycache__/
 /staticfiles/
 /upload/
 /.codex/
+/generated_images/
