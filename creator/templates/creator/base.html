@@ -1,0 +1,43 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Nextgen Creator{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'creator/app.css' %}">
+  <script defer src="{% static 'creator/app.js' %}"></script>
+</head>
+<body>
+{% include 'creator/icons.html' %}
+<a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+<div class="shell">
+  <header class="topbar">
+    <a href="{% url 'today' %}" class="brand"><span class="brand-mark" aria-hidden="true"></span><span>Nextgen<span class="brand-light"> Creator</span></span></a>
+    {% if user.is_authenticated %}
+    <nav class="topnav" aria-label="Principal">
+      <a href="{% url 'today' %}" {% if section == 'today' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='grid' %} Hoje</a>
+      <a href="{% url 'agenda' %}" {% if section == 'agenda' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='calendar' %} Agenda</a>
+      {% block nav_content %}{% endblock %}
+    </nav>
+    <div class="account">
+      {% block quick_action %}{% endblock %}
+      <details class="menu">
+        <summary class="avatar" aria-label="Mais opções">{{ user.get_username|first|upper }}</summary>
+        <div class="menu-panel">
+          {% block secondary_nav %}{% endblock %}
+          <a href="{% url 'preferences' %}">{% include 'creator/icon.html' with name='settings' %} Configurações</a>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>{% include 'creator/icon.html' with name='logout' %} Sair</button></form>
+        </div>
+      </details>
+    </div>
+    {% endif %}
+  </header>
+  <main id="conteudo" class="main">
+    {% include 'creator/messages.html' %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+<section class="surface focus-card">
+  <div class="focus-icon">{% include 'creator/icon.html' with name='target' %}</div>
+  <div><h2>Prioridade da semana</h2><p>{{ focus.text|default:'Defina o que merece mais atenção nesta semana.' }}</p></div>
+  <a class="button secondary small" href="{% url 'focus_edit' monday|date:'Y-m-d' %}?next={{ request.get_full_path|urlencode }}">{% if focus.text %}Editar{% else %}Definir{% endif %} prioridade</a>
+</section>

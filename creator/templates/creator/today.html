@@ -1,0 +1,37 @@
+{% extends 'creator/base.html' %}
+{% load creator_ui %}
+{% block title %}Hoje · Nextgen Creator{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="date-chip">{% include 'creator/icon.html' with name='calendar' %} {{ day|date:"l, d \d\e F"|capfirst }}</p>
+    <h1>Seu dia de<br>criação<span>.</span></h1>
+    <a class="button primary" href="{% url 'task_create' %}?data={{ day|date:'Y-m-d' }}&amp;next={{ request.get_full_path|urlencode }}">{% include 'creator/icon.html' with name='plus' %} Nova tarefa</a>
+  </div>
+</section>
+{% include 'creator/focus.html' %}
+<div class="dashboard-grid">
+  <div class="work-stack">
+    <section class="surface tasks-card">
+      <div class="section-heading"><div><h2>Tarefas de hoje</h2><p>{{ tasks|length }} tarefa{{ tasks|length|pluralize }} no dia</p></div><a class="icon-button" href="{% url 'task_create' %}?next={{ request.get_full_path|urlencode }}" aria-label="Adicionar tarefa">{% include 'creator/icon.html' with name='plus' %}</a></div>
+      {% for task in tasks %}
+        {% include 'creator/task_row.html' %}
+      {% empty %}
+        <div class="empty"><span class="empty-icon">{% include 'creator/icon.html' with name='calendar' %}</span><h3>Seu dia está livre.</h3><a class="text-link" href="{% url 'task_create' %}?next={{ request.get_full_path|urlencode }}">Planejar tarefa {% include 'creator/icon.html' with name='arrow' %}</a></div>
+      {% endfor %}
+    </section>
+    {% if overdue %}
+    <section class="surface tasks-card" aria-labelledby="overdue">
+      <div class="section-heading"><h2 id="overdue">Tarefas atrasadas</h2></div>
+      {% for task in overdue %}{% include 'creator/task_row.html' with show_date=True %}{% endfor %}
+    </section>
+    {% endif %}
+  </div>
+  <section class="surface week-card">
+    <div class="section-heading"><div><h2>Resumo da semana</h2><p>{{ monday|date:"d/m" }} a {{ sunday|date:"d/m" }}</p></div><a class="icon-button" href="{% url 'agenda' %}" aria-label="Abrir agenda">{% include 'creator/icon.html' with name='arrow' %}</a></div>
+    <div class="week-metric"><strong>{{ planned|hours }}</strong><span>de {{ goal|hours }} planejadas</span></div>
+    <progress max="100" value="{{ progress }}" aria-label="Progresso do planejamento">{{ progress }}%</progress>
+    <div class="week-legend"><div><span class="legend-dot green"></span><span>Concluídas</span><strong>{{ completed|hours }}</strong></div><div><span class="legend-dot"></span><span>{% if excess %}Acima da meta{% else %}Disponíveis{% endif %}</span><strong>{% if excess %}{{ excess|hours }}{% else %}{{ remaining|hours }}{% endif %}</strong></div></div>
+  </section>
+</div>
+{% endblock %}

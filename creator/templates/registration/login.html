@@ -1,0 +1,15 @@
+{% extends 'creator/base.html' %}
+{% block title %}Entrar · Nextgen Creator{% endblock %}
+{% block content %}
+<div class="login-layout">
+  <section class="surface form-panel">
+    <h1>Entre na sua conta</h1>
+    <form method="post">{% csrf_token %}
+      {% include 'creator/fields.html' %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="button primary">Entrar</button>
+    </form>
+  </section>
+  <div class="login-art" aria-hidden="true"></div>
+</div>
+{% endblock %}

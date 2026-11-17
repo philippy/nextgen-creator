@@ -1,0 +1,20 @@
+{% extends 'creator/base.html' %}
+{% load creator_ui %}
+{% block title %}{{ task.title }} · Nextgen Creator{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ return_to }}">← Voltar</a>
+<article class="surface detail-panel">
+  <div class="page-heading">
+    <div><p class="eyebrow">{% if task.done %}Concluída{% else %}Pendente{% endif %}</p><h1>{{ task.title }}</h1>
+    <p class="muted">{{ task.date|date:"l, d \d\e F" }} · {% if task.time %}{{ task.time|time:"H:i" }}{% else %}Sem horário{% endif %} · {{ task.minutes|hours }}</p></div>
+    {% include 'creator/task_status.html' %}
+  </div>
+  {% if task.objective %}<section class="detail-section"><h2>Objetivo</h2>{{ task.objective|linebreaks }}</section>{% endif %}
+  {% if task.instructions %}<section class="detail-section"><h2>Instruções</h2>{{ task.instructions|linebreaks }}</section>{% endif %}
+  {% if task.learning %}<section class="detail-section"><h2>Nota de aprendizado</h2>{{ task.learning|linebreaks }}</section>{% endif %}
+  <div class="actions">
+    <a class="button secondary" href="{% url 'task_edit' task.pk %}">Editar tarefa</a>
+    <a class="button secondary" href="{% url 'task_reschedule' task.pk %}">Reagendar</a>
+  </div>
+</article>
+{% endblock %}

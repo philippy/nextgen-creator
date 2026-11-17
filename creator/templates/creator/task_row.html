@@ -1,0 +1,14 @@
+{% load creator_ui %}
+<article class="task-row{% if task.done %} is-done{% endif %}">
+  {% include 'creator/task_status.html' with compact=True %}
+  <div class="task-info">
+    <h3>{{ task.title }}</h3>
+    <div class="task-meta">
+      {% if show_date %}<span>{{ task.date|date:"d/m" }}</span>{% endif %}
+      <span>{% if task.time %}{{ task.time|time:"H:i" }}{% else %}Sem horário{% endif %}</span><span>{{ task.minutes|hours }}</span>
+      {% if task.done %}<span class="done-label">Concluída</span>{% endif %}
+    </div>
+  </div>
+  <a class="row-link" aria-label="Ver detalhes de {{ task.title }}" href="{{ task.get_absolute_url }}?next={{ request.get_full_path|urlencode }}">Ver detalhes {% include 'creator/icon.html' with name='chevron' %}</a>
+  {% if show_date %}<a class="button secondary small" href="{% url 'task_reschedule' task.pk %}?next={{ request.get_full_path|urlencode }}">Reagendar</a>{% endif %}
+</article>

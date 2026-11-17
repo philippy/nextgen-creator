@@ -1,0 +1,10 @@
+<form method="post" action="{% url 'task_status' task.pk %}" class="status-form">
+  {% csrf_token %}
+  <input type="hidden" name="done" value="{% if task.done %}0{% else %}1{% endif %}">
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  {% if compact %}
+  <button class="task-check{% if task.done %} checked{% endif %}" aria-label="{% if task.done %}Desfazer conclusão de{% else %}Concluir{% endif %} {{ task.title }}" title="{% if task.done %}Desfazer conclusão{% else %}Concluir tarefa{% endif %}">{% include 'creator/icon.html' with name='check' %}</button>
+  {% else %}
+  <button class="button primary">{% if task.done %}Reabrir tarefa{% else %}Concluir tarefa{% endif %}</button>
+  {% endif %}
+</form>

@@ -1,0 +1,31 @@
+{% extends 'creator/base.html' %}
+{% load creator_ui %}
+{% block title %}Agenda · Nextgen Creator{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><h1>Agenda</h1><p class="muted">{{ monday|date:"d/m/Y" }} a {{ sunday|date:"d/m/Y" }}</p></div>
+  <a class="button primary" href="{% url 'task_create' %}?data={{ monday|date:'Y-m-d' }}&amp;next={{ request.get_full_path|urlencode }}">{% include 'creator/icon.html' with name='plus' %} Nova tarefa</a>
+</div>
+<nav class="week-nav" aria-label="Navegar por semana">
+  <a class="button secondary small" href="{{ previous }}">← Semana anterior</a>
+  <a class="button secondary small" href="{% url 'agenda' %}">Semana atual</a>
+  <a class="button secondary small" href="{{ following }}">Semana seguinte →</a>
+</nav>
+<div class="metric-grid">
+  <div class="surface metric"><span>Planejadas</span><strong>{{ planned|hours }} <small>de {{ goal|hours }}</small></strong></div>
+  <div class="surface metric"><span>Concluídas</span><strong>{{ completed|hours }}</strong></div>
+  <div class="surface metric"><span>{% if excess %}Acima da meta{% else %}Disponíveis{% endif %}</span><strong>{% if excess %}{{ excess|hours }}{% else %}{{ remaining|hours }}{% endif %}</strong></div>
+</div>
+{% include 'creator/focus.html' %}
+<div class="day-list">
+  {% for item in days %}
+  <section class="surface day-card{% if item.date == current_day %} current-day{% endif %}">
+    <div class="section-heading">
+      <div><h2>{{ item.date|date:"l"|capfirst }} <span class="day-date">{{ item.date|date:"d/m" }}</span>{% if item.date == current_day %} <span class="tag">Hoje</span>{% endif %}</h2><p>{{ item.total|hours }} no dia</p></div>
+      <a class="button secondary small" href="{% url 'task_create' %}?data={{ item.date|date:'Y-m-d' }}&amp;next={{ request.get_full_path|urlencode }}">{% include 'creator/icon.html' with name='plus' %} Adicionar tarefa</a>
+    </div>
+    {% for task in item.tasks %}{% include 'creator/task_row.html' %}{% empty %}<p class="muted">Nenhuma tarefa planejada.</p>{% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

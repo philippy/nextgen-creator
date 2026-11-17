@@ -1,0 +1,16 @@
+{% extends 'creator/base.html' %}
+{% block title %}{{ title }} · Nextgen Creator{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ return_to }}">← Voltar</a>
+<section class="surface form-panel">
+  <h1>{{ title }}</h1>
+  <form method="post" novalidate>{% csrf_token %}
+    {% if request.GET.next or request.POST.next %}<input type="hidden" name="next" value="{{ return_to }}">{% endif %}
+    {% include 'creator/fields.html' %}
+    <div class="actions">
+      <button class="button primary">{{ button_label|default:'Salvar' }}</button>
+      <a class="button secondary" href="{{ return_to }}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
