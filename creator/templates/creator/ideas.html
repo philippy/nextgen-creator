@@ -8,7 +8,7 @@
 </nav>
 <form class="filter-bar" method="get">
   {% if archived %}<input type="hidden" name="estado" value="arquivadas">{% endif %}
-  <label>Assunto<select name="assunto">{% include 'creator/tag_options.html' %}</select></label>
+  <div class="filter-field"><label for="filter-subject">Assunto</label><select id="filter-subject" name="assunto">{% include 'creator/tag_options.html' %}</select></div>
   <button class="button secondary">Filtrar</button>
   {% if selected_tag %}<a class="text-link" href="{% url 'ideas' %}{% if archived %}?estado=arquivadas{% endif %}">Limpar filtros</a>{% endif %}
 </form>

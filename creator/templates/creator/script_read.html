@@ -1,0 +1,24 @@
+{% extends 'creator/base.html' %}
+{% block title %}{{ script.title }} · Nextgen Creator{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'scripts' %}?aba=aprovados">← Roteiros aprovados</a>
+<article class="surface detail-panel">
+  <div class="page-heading">
+    <div><p class="eyebrow">{{ script.get_format_display }} · Aprovado</p><h1>{{ script.title }}</h1></div>
+  </div>
+  {% include 'creator/tags.html' with tags=script.tags %}
+  <div class="actions script-header-actions">
+    <a class="button primary" href="{% url 'task_create' %}?roteiro={{ script.pk }}">{% include 'creator/icon.html' with name='calendar' %} Agendar gravação</a>
+    <a class="button secondary" href="{% url 'script_edit' script.pk %}">Editar</a>
+    <form action="{% url 'script_reopen' script.pk %}" method="post">{% csrf_token %}<button class="button secondary">Voltar para rascunho</button></form>
+  </div>
+  {% if script.video_title or script.thumbnail_text or script.thumbnail %}
+  <section class="detail-section">
+    {% if script.video_title %}<h2>{{ script.video_title }}</h2>{% endif %}
+    {% if script.thumbnail_text %}<p>{{ script.thumbnail_text }}</p>{% endif %}
+    {% if script.thumbnail %}<img class="thumb" src="{% url 'thumbnail' script.pk %}" alt="Thumbnail do roteiro" referrerpolicy="no-referrer">{% endif %}
+  </section>
+  {% endif %}
+  <div class="detail-section markdown">{{ content }}</div>
+</article>
+{% endblock %}

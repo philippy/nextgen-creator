@@ -9,6 +9,8 @@
     <p class="muted">{{ task.date|date:"l, d \d\e F" }} · {% if task.time %}{{ task.time|time:"H:i" }}{% else %}Sem horário{% endif %} · {{ task.minutes|hours }}</p></div>
     {% include 'creator/task_status.html' %}
   </div>
+  {% if task.script %}<section class="detail-section"><h2>Roteiro vinculado</h2><p>{{ task.script.title }}</p><a class="text-link" href="{{ task.script.get_absolute_url }}">Abrir roteiro {% include 'creator/icon.html' with name='arrow' %}</a></section>{% endif %}
+  {% block calendar %}{% endblock %}
   {% if task.objective %}<section class="detail-section"><h2>Objetivo</h2>{{ task.objective|linebreaks }}</section>{% endif %}
   {% if task.instructions %}<section class="detail-section"><h2>Instruções</h2>{{ task.instructions|linebreaks }}</section>{% endif %}
   {% if task.learning %}<section class="detail-section"><h2>Nota de aprendizado</h2>{{ task.learning|linebreaks }}</section>{% endif %}

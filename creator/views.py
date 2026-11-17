@@ -8,12 +8,13 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .forms import FocusForm, RescheduleForm, SettingsForm, TaskForm
-from .models import Task, WeekFocus, WorkspaceSettings
+from .models import Script, Task, WeekFocus, WorkspaceSettings
 
 
 def selected_date(value, default):
     try:
-        return date.fromisoformat(value) if value else default
+        parsed = date.fromisoformat(value) if value else default
+        return parsed if 1900 <= parsed.year <= 9998 else default
     except ValueError:
         return default
 
@@ -37,14 +38,14 @@ def safe_return(request, fallback):
 
 def week_context(monday):
     sunday = monday + timedelta(days=6)
-    tasks = list(Task.objects.filter(date__range=(monday, sunday)))
+    tasks = list(Task.objects.filter(date__range=(monday, sunday)).select_related("script"))
     goal = WorkspaceSettings.current().weekly_goal_minutes
     planned = sum(task.minutes for task in tasks)
     return {
         "monday": monday,
         "sunday": sunday,
         "week_tasks": tasks,
-        "focus": WeekFocus.objects.filter(monday=monday).first(),
+        "focus": WeekFocus.objects.filter(monday=monday).select_related("script").first(),
         "goal": goal,
         "planned": planned,
         "completed": sum(task.minutes for task in tasks if task.done),
@@ -61,7 +62,7 @@ def today(request):
         "section": "today",
         "day": day,
         "tasks": [task for task in context["week_tasks"] if task.date == day],
-        "overdue": Task.objects.filter(date__lt=day, done=False),
+        "overdue": Task.objects.filter(date__lt=day, done=False).select_related("script"),
     })
     return render(request, "creator/today.html", context)
 
@@ -93,7 +94,7 @@ def edit_focus(request, monday):
     target = safe_return(request, week_url(week))
     form = FocusForm(request.POST if request.method == "POST" else None, instance=focus)
     if request.method == "POST" and form.is_valid():
-        WeekFocus.objects.update_or_create(monday=week, defaults={"text": form.cleaned_data["text"]})
+        WeekFocus.objects.update_or_create(monday=week, defaults=form.cleaned_data)
         messages.success(request, "Prioridade da semana salva.")
         return redirect(target)
     return render(request, "creator/form.html", {
@@ -102,7 +103,7 @@ def edit_focus(request, monday):
 
 
 def task_detail(request, pk):
-    task = get_object_or_404(Task, pk=pk)
+    task = get_object_or_404(Task.objects.select_related("script"), pk=pk)
     return render(request, "creator/task_detail.html", {
         "section": "agenda", "task": task, "return_to": safe_return(request, week_url(monday_of(task.date))),
     })
@@ -112,6 +113,11 @@ def task_detail(request, pk):
 def task_form(request, pk=None, reschedule=False):
     task = get_object_or_404(Task, pk=pk) if pk else None
     initial = {"date": selected_date(request.GET.get("data"), timezone.localdate())}
+    script_id = request.GET.get("roteiro", "")
+    if not task and script_id.isascii() and script_id.isdecimal() and len(script_id) <= 18:
+        script = Script.objects.filter(pk=request.GET["roteiro"], status=Script.Status.APPROVED).first()
+        if script:
+            initial.update(script=script.pk, title=f"Gravar: {script.title}"[:180])
     form_class = RescheduleForm if reschedule else TaskForm
     form = form_class(request.POST if request.method == "POST" else None, instance=task, initial=initial if not task else None)
     target = safe_return(request, task.get_absolute_url() if task else week_url(monday_of(initial["date"])))
@@ -120,7 +126,8 @@ def task_form(request, pk=None, reschedule=False):
             Task.objects.filter(pk=task.pk).update(**form.cleaned_data)
             messages.success(request, "Tarefa reagendada.")
         else:
-            task = form.save()
+            task = form.save(commit=False)
+            task.save(update_fields=TaskForm.Meta.fields if pk else None)
             messages.success(request, "Tarefa atualizada." if pk else "Tarefa criada.")
         return redirect(safe_return(request, task.get_absolute_url()))
     title = "Reagendar tarefa" if reschedule else ("Editar tarefa" if task else "Nova tarefa")
@@ -142,7 +149,7 @@ def task_status(request, pk):
 def preferences(request):
     form = SettingsForm(request.POST if request.method == "POST" else None, instance=WorkspaceSettings.current())
     if request.method == "POST" and form.is_valid():
-        form.save()
+        form.save(commit=False).save(update_fields=SettingsForm.Meta.fields)
         messages.success(request, "Configurações salvas.")
         return redirect("preferences")
     return render(request, "creator/form.html", {

@@ -2,15 +2,17 @@ from pathlib import Path
 
 from django.contrib import messages
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
-from .content_forms import ConvertForm, IdeaForm, ScriptForm
+from .content_forms import ConvertForm, IdeaForm, ProductionForm, ScriptForm
+from .forms import GuideForm
 from .markdown import render_markdown
-from .models import Idea, Script, Tag
+from .models import Idea, Script, Tag, WorkspaceSettings
 from .views import safe_return
 
 MODELS_DIR = Path(__file__).with_name("script_models")
@@ -94,22 +96,117 @@ def scripts(request):
 
 
 @require_http_methods(["GET", "POST"])
+def script_detail(request, pk):
+    script = get_object_or_404(Script, pk=pk)
+    if script.status == Script.Status.DRAFT:
+        return script_editor(request, pk)
+    return render(request, "creator/script_read.html", {
+        "section": "scripts", "script": script, "content": render_markdown(script.body),
+    })
+
+
+@require_http_methods(["GET", "POST"])
 def script_editor(request, pk=None):
     script = get_object_or_404(Script, pk=pk) if pk else None
     initial = {}
     template = request.GET.get("modelo")
     if not script and template in Script.Format.values:
         initial = {"format": template, "body": (MODELS_DIR / f"{template}.md").read_text(encoding="utf-8")}
-    form = ScriptForm(request.POST if request.method == "POST" else None, instance=script, initial=initial)
-    if request.method == "POST" and form.is_valid():
-        with transaction.atomic():
-            saved = form.save()
-            form.apply_tags(saved)
-        messages.success(request, "Roteiro salvo.")
+    approved = bool(script and script.status == Script.Status.APPROVED)
+    form_class = ProductionForm if approved else ScriptForm
+    submitted = request.method == "POST"
+    form = form_class(request.POST if submitted else None, request.FILES if submitted else None, instance=script, initial=initial)
+    storage = script.thumbnail.storage if approved else None
+    valid = submitted and form.is_valid()
+    approve = submitted and request.POST.get("action") == "approve" and not approved
+    if approve and not form.cleaned_data.get("body"):
+        form.add_error("body", "Preencha o texto completo para aprovar o roteiro.")
+        valid = False
+    if approved and valid and not form.cleaned_data["body"]:
+        form.add_error("body", "Um roteiro aprovado precisa de texto.")
+        valid = False
+    if valid:
+        new_thumbnail = None
+        try:
+            with transaction.atomic():
+                saved = form.save(commit=False)
+                current = Script.objects.filter(pk=saved.pk).values("status", "thumbnail").first() if saved.pk else None
+                expected_status = Script.Status.APPROVED if approved else Script.Status.DRAFT
+                if current and current["status"] != expected_status:
+                    messages.warning(request, "O status do roteiro mudou. Abra o editor para continuar.")
+                    return redirect(saved)
+                old_thumbnail = current["thumbnail"] if current else ""
+                if approved and form.cleaned_data.get("thumbnail_file"):
+                    uploaded = form.cleaned_data["thumbnail_file"]
+                    saved.thumbnail.save(uploaded.name, uploaded, save=False)
+                    new_thumbnail = saved.thumbnail.name
+                elif approved and form.cleaned_data.get("remove_thumbnail"):
+                    saved.thumbnail = ""
+                if approve:
+                    saved.status = Script.Status.APPROVED
+                if saved.pk:
+                    model_fields = ["title", "format", "body", "edited_at"]
+                    if approved:
+                        model_fields.extend(("video_title", "thumbnail_text"))
+                        if new_thumbnail or form.cleaned_data.get("remove_thumbnail"):
+                            model_fields.append("thumbnail")
+                    if approve:
+                        model_fields.append("status")
+                    saved.save(update_fields=model_fields)
+                else:
+                    saved.save()
+                form.apply_tags(saved)
+                if old_thumbnail and (new_thumbnail or form.cleaned_data.get("remove_thumbnail")):
+                    transaction.on_commit(lambda: storage.delete(old_thumbnail), robust=True)
+        except Exception:
+            if new_thumbnail:
+                storage.delete(new_thumbnail)
+            raise
+        messages.success(request, "Roteiro aprovado." if approve else "Roteiro salvo.")
         return redirect(saved)
     return render(request, "creator/script_editor.html", {
-        "section": "scripts", "script": script, "form": form,
-        "title": "Editar roteiro" if script else "Novo roteiro", "return_to": reverse("scripts"),
+        "section": "scripts", "script": script, "form": form, "approved": approved,
+        "title": "Editar roteiro" if script else "Novo roteiro",
+        "return_to": script.get_absolute_url() if approved else reverse("scripts"),
+    })
+
+
+@require_POST
+def script_reopen(request, pk):
+    script = get_object_or_404(Script, pk=pk)
+    Script.objects.filter(pk=pk, status=Script.Status.APPROVED).update(
+        status=Script.Status.DRAFT, edited_at=timezone.now(),
+    )
+    messages.success(request, "Roteiro voltou para rascunho.")
+    return redirect(script)
+
+
+@never_cache
+@require_safe
+def thumbnail(request, pk):
+    script = get_object_or_404(Script, pk=pk)
+    if not script.thumbnail:
+        raise Http404
+    try:
+        image = script.thumbnail.open("rb")
+    except FileNotFoundError as error:
+        raise Http404 from error
+    content_type = "image/png" if script.thumbnail.name.endswith(".png") else "image/jpeg"
+    response = FileResponse(image, content_type=content_type)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@require_http_methods(["GET", "POST"])
+def guide(request):
+    form = GuideForm(request.POST if request.method == "POST" else None, instance=WorkspaceSettings.current())
+    if request.method == "POST" and form.is_valid():
+        guide_data = form.save(commit=False)
+        guide_data.save(update_fields=GuideForm.Meta.fields)
+        messages.success(request, "Guia do canal atualizado.")
+        return redirect("guide")
+    return render(request, "creator/guide.html", {
+        "section": "guide", "form": form, "formats": Script.Format.choices,
     })
 
 

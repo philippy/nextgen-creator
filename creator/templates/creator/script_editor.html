@@ -6,11 +6,12 @@
   <div class="page-heading"><h1>{{ title }}</h1>{% if script %}<span class="tag">{{ script.get_status_display }}</span>{% endif %}</div>
   <form method="post" enctype="multipart/form-data" novalidate data-script-editor data-preview-url="{% url 'script_preview' %}">{% csrf_token %}
     {% include 'creator/fields.html' %}
-    {% block editor_extra %}{% endblock %}
+    {% if approved and script.thumbnail %}<img class="thumb" src="{% url 'thumbnail' script.pk %}" alt="Thumbnail atual">{% endif %}
+    {% if approved %}<img class="thumb" data-thumb-preview alt="Prévia da nova thumbnail" hidden>{% endif %}
     <div class="actions editor-actions">
       <button class="button primary" name="action" value="save">Salvar</button>
       <button class="button secondary" type="button" data-preview hidden aria-pressed="false">Prévia</button>
-      {% block script_actions %}{% endblock %}
+      {% if not approved %}<button class="button secondary" name="action" value="approve">Aprovar roteiro</button>{% endif %}
     </div>
     <div class="markdown preview" data-preview-content hidden></div>
     <p class="errorlist" data-preview-error role="alert" hidden></p>

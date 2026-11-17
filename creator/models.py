@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -16,6 +18,7 @@ class Task(models.Model):
     instructions = models.TextField("Instruções", blank=True)
     learning = models.TextField("Nota de aprendizado", blank=True)
     done = models.BooleanField(default=False)
+    script = models.ForeignKey("Script", blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Roteiro vinculado")
 
     class Meta:
         ordering = ("date", "done", models.F("time").asc(nulls_last=True), "pk")
@@ -30,12 +33,19 @@ class Task(models.Model):
 class WeekFocus(models.Model):
     monday = models.DateField(unique=True)
     text = models.CharField("Prioridade da semana", max_length=220, blank=True)
+    script = models.ForeignKey("Script", blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Roteiro vinculado")
 
 
 class WorkspaceSettings(models.Model):
     weekly_goal_minutes = models.PositiveSmallIntegerField(
         default=1200, validators=[MinValueValidator(15), MaxValueValidator(10080)]
     )
+
+    channel_proposal = models.TextField("Proposta do canal", blank=True)
+    channel_audience = models.TextField("Público", blank=True)
+    channel_themes = models.TextField("Temas", blank=True)
+    channel_voice = models.TextField("Tom de voz", blank=True)
+    approval_checklist = models.TextField("Checklist de aprovação", blank=True)
 
     @classmethod
     def current(cls):
@@ -64,6 +74,10 @@ class Idea(models.Model):
         ordering = ("-created_at", "-pk")
 
 
+def thumbnail_path(instance, filename):
+    return f"{uuid4().hex}.{filename.rsplit('.', 1)[-1]}"
+
+
 class Script(models.Model):
     class Format(models.TextChoices):
         SHORT = "short", "Short"
@@ -82,6 +96,9 @@ class Script(models.Model):
     tags = models.ManyToManyField(Tag, blank=True)
     idea = models.OneToOneField(Idea, related_name="script", blank=True, null=True, on_delete=models.SET_NULL)
     edited_at = models.DateTimeField(auto_now=True)
+    video_title = models.CharField("Título do vídeo", max_length=100, blank=True)
+    thumbnail_text = models.CharField("Texto da thumb", max_length=180, blank=True)
+    thumbnail = models.ImageField("Imagem da thumb", upload_to=thumbnail_path, blank=True)
 
     class Meta:
         ordering = ("-edited_at", "-pk")

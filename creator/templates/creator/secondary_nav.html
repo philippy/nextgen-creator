@@ -1,0 +1,3 @@
+<a href="{% url 'guide' %}" {% if section == 'guide' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='book' %} Guia do canal</a>
+<a href="{% url 'script_models' %}" {% if section == 'models' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='layers' %} Modelos</a>
+<a href="{% url 'preferences' %}" {% if section == 'preferences' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='settings' %} Configurações</a>

@@ -6,6 +6,7 @@
     <div class="task-meta">
       {% if show_date %}<span>{{ task.date|date:"d/m" }}</span>{% endif %}
       <span>{% if task.time %}{{ task.time|time:"H:i" }}{% else %}Sem horário{% endif %}</span><span>{{ task.minutes|hours }}</span>
+      {% if task.script %}<a class="text-link" href="{{ task.script.get_absolute_url }}">{{ task.script.title }}</a>{% endif %}
       {% if task.done %}<span class="done-label">Concluída</span>{% endif %}
     </div>
   </div>

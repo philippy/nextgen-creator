@@ -25,21 +25,22 @@
     <div class="account">
       <a class="button quick-idea" href="{% url 'idea_create' %}?next={{ request.get_full_path|urlencode }}">{% include 'creator/icon.html' with name='plus' %} Nova ideia</a>
       <details class="menu">
-        <summary class="avatar" aria-label="Mais opções">{{ user.get_username|first|upper }}</summary>
+        <summary class="avatar" aria-label="Mais opções"><span class="desktop-avatar">{{ user.get_username|first|upper }}</span><span class="mobile-more">Mais</span></summary>
         <div class="menu-panel">
-          {% block secondary_nav %}{% endblock %}
-          <a href="{% url 'script_models' %}">{% include 'creator/icon.html' with name='layers' %} Modelos</a>
-          <a href="{% url 'preferences' %}">{% include 'creator/icon.html' with name='settings' %} Configurações</a>
+          <div class="mobile-links">{% include 'creator/secondary_nav.html' %}</div>
           <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>{% include 'creator/icon.html' with name='logout' %} Sair</button></form>
         </div>
       </details>
     </div>
     {% endif %}
   </header>
+  <div class="frame{% if user.is_authenticated %} signed-in{% endif %}">
+  {% if user.is_authenticated %}<aside class="sidebar"><nav aria-label="Ferramentas">{% include 'creator/secondary_nav.html' %}</nav></aside>{% endif %}
   <main id="conteudo" class="main">
     {% include 'creator/messages.html' %}
     {% block content %}{% endblock %}
   </main>
+  </div>
 </div>
 </body>
 </html>

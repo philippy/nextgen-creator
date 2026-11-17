@@ -49,3 +49,45 @@ if (editor) {
     }
   });
 }
+
+if (editor) {
+  const tools = editor.querySelector("[data-editor-tools]");
+  const body = editor.elements.body;
+  tools.hidden = false;
+  tools.addEventListener("click", (event) => {
+    const format = event.target.dataset.format;
+    if (!format || body.hidden) return;
+    const start = body.selectionStart;
+    const end = body.selectionEnd;
+    const selected = body.value.slice(start, end);
+    const startsOnNewLine = start === 0 || body.value[start - 1] === "\n";
+    const lineBreak = startsOnNewLine ? "" : "\n";
+    let text;
+    if (format === "bold") text = "**" + (selected || "texto") + "**";
+    if (format === "heading") text = lineBreak + "## " + (selected || "Título");
+    if (format === "list") {
+      text = lineBreak + (selected || "Item").split("\n").map((line) => "- " + line).join("\n");
+    }
+    body.setRangeText(text, start, end, "end");
+    body.dispatchEvent(new Event("input", { bubbles: true }));
+    body.focus();
+  });
+
+  const imageField = editor.elements.thumbnail_file;
+  const imagePreview = editor.querySelector("[data-thumb-preview]");
+  if (imageField && imagePreview) {
+    let previewUrl;
+    imageField.addEventListener("change", () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const file = imageField.files[0];
+      const canPreview = file && ["image/png", "image/jpeg"].includes(file.type);
+      if (canPreview) {
+        previewUrl = URL.createObjectURL(file);
+        imagePreview.src = previewUrl;
+      } else {
+        imagePreview.removeAttribute("src");
+      }
+      imagePreview.hidden = !canPreview;
+    });
+  }
+}

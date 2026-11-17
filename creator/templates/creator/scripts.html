@@ -8,11 +8,11 @@
 </nav>
 <form class="filter-bar" method="get">
   {% if approved %}<input type="hidden" name="aba" value="aprovados">{% endif %}
-  <label>Título<input type="search" name="busca" value="{{ search }}" placeholder="Buscar por título"></label>
-  <label>Assunto<select name="assunto">{% include 'creator/tag_options.html' %}</select></label>
-  <label>Formato<select name="formato"><option value="">Todos os formatos</option>
+  <div class="filter-field"><label for="filter-title">Título</label><input id="filter-title" type="search" name="busca" value="{{ search }}" placeholder="Buscar por título"></div>
+  <div class="filter-field"><label for="filter-subject">Assunto</label><select id="filter-subject" name="assunto">{% include 'creator/tag_options.html' %}</select></div>
+  <div class="filter-field"><label for="filter-format">Formato</label><select id="filter-format" name="formato"><option value="">Todos os formatos</option>
     {% for value, name in formats %}<option value="{{ value }}" {% if value == selected_format %}selected{% endif %}>{{ name }}</option>{% endfor %}
-  </select></label>
+  </select></div>
   <button class="button secondary">Filtrar</button>
   {% if has_filters %}<a class="text-link" href="{% url 'scripts' %}{% if approved %}?aba=aprovados{% endif %}">Limpar filtros</a>{% endif %}
 </form>

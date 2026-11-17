@@ -6,7 +6,7 @@ from .models import Task, WeekFocus, WorkspaceSettings
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ("title", "date", "time", "minutes", "objective", "instructions", "learning")
+        fields = ("title", "date", "time", "minutes", "script", "objective", "instructions", "learning")
         widgets = {
             "date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
             "time": forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
@@ -24,8 +24,8 @@ class RescheduleForm(TaskForm):
 class FocusForm(forms.ModelForm):
     class Meta:
         model = WeekFocus
-        fields = ("text",)
-        help_texts = {"text": "Deixe em branco para limpar a prioridade."}
+        fields = ("text", "script")
+        help_texts = {"text": "Escreva uma prioridade ou escolha um roteiro. Deixe ambos em branco para limpar."}
 
 
 class SettingsForm(forms.ModelForm):
@@ -34,3 +34,12 @@ class SettingsForm(forms.ModelForm):
         fields = ("weekly_goal_minutes",)
         labels = {"weekly_goal_minutes": "Meta semanal em minutos"}
         help_texts = {"weekly_goal_minutes": "20 horas equivalem a 1.200 minutos."}
+
+
+class GuideForm(forms.ModelForm):
+    class Meta:
+        model = WorkspaceSettings
+        fields = (
+            "channel_proposal", "channel_audience", "channel_themes", "channel_voice", "approval_checklist",
+        )
+        widgets = dict.fromkeys(fields, forms.Textarea(attrs={"rows": 3}))

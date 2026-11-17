@@ -3,6 +3,13 @@
   {% if field.is_hidden %}{{ field }}{{ field.errors }}{% else %}
   <div class="field{% if field.errors %} invalid{% endif %}">
     {{ field.label_tag }}
+    {% if field.name == 'body' %}
+    <div class="editor-tools actions" data-editor-tools hidden aria-label="Formatação">
+      <button type="button" class="button secondary small" data-format="heading">Título</button>
+      <button type="button" class="button secondary small" data-format="bold">Negrito</button>
+      <button type="button" class="button secondary small" data-format="list">Lista</button>
+    </div>
+    {% endif %}
     {{ field }}
     {% if field.help_text %}<p class="hint" {% if field.id_for_label %}id="{{ field.id_for_label }}_helptext"{% endif %}>{{ field.help_text }}</p>{% endif %}
     {{ field.errors }}
