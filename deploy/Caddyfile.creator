@@ -1,0 +1,21 @@
+# Acrescente somente este bloco ao Caddyfile existente da VPS.
+# O Caddy público preserva www, domínio raiz e outros aplicativos.
+creator.nextgenbrasil.com {
+  encode gzip
+  request_body {
+    max_size 10MB
+  }
+  handle_path /static/* {
+    root * /opt/nextgen-creator/staticfiles
+    file_server
+  }
+  handle {
+    reverse_proxy 127.0.0.1:8031 {
+      header_up X-Forwarded-For {remote_host}
+    }
+  }
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy same-origin
+  }
+}

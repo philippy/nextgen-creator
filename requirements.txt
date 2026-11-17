@@ -2,3 +2,4 @@ Django>=5.2.19,<5.3
 Pillow>=13.0.0,<14
 gunicorn>=27.0.1,<28
 python-dotenv>=1.2.4,<2
+django-axes==9.0.0

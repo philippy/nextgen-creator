@@ -36,14 +36,14 @@ Prepare um subdomínio com DNS apontado para a VPS, em um bloco HTTPS do servido
 ```bash
 sudo apt-get update
 sudo apt-get install -y git python3 python3-venv sqlite3
-sudo useradd --system --user-group --shell /usr/sbin/nologin nextgen
+sudo useradd --system --user-group --shell /usr/sbin/nologin nextgen-creator
 sudo git clone https://github.com/philippy/nextgen-creator.git /opt/nextgen-creator
 cd /opt/nextgen-creator
 sudo python3 -m venv .venv
 sudo .venv/bin/python -m pip install -r requirements.txt
-sudo install -d -o nextgen -g nextgen -m 0700 /var/lib/nextgen-creator
-sudo install -d -o nextgen -g nextgen -m 0700 /var/lib/nextgen-creator/thumbs
-sudo install -o root -g nextgen -m 0640 .env.example .env
+sudo install -d -o nextgen-creator -g nextgen-creator -m 0700 /var/lib/nextgen-creator
+sudo install -d -o nextgen-creator -g nextgen-creator -m 0700 /var/lib/nextgen-creator/thumbs
+sudo install -o root -g nextgen-creator -m 0640 .env.example .env
 sudo .venv/bin/python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 sudoedit .env
 ```
@@ -60,9 +60,9 @@ NEXTGEN_PUBLIC_URL=https://creator.seudominio.com
 ```
 
 ```bash
-sudo -u nextgen .venv/bin/python manage.py migrate
-sudo -u nextgen .venv/bin/python manage.py createsuperuser
-sudo -u nextgen .venv/bin/python manage.py check --deploy
+sudo -u nextgen-creator .venv/bin/python manage.py migrate
+sudo -u nextgen-creator .venv/bin/python manage.py createsuperuser
+sudo -u nextgen-creator .venv/bin/python manage.py check --deploy
 sudo .venv/bin/python manage.py collectstatic --noinput
 sudo install -m 0644 deploy/nextgen-creator.service /etc/systemd/system/nextgen-creator.service
 sudo systemctl daemon-reload
@@ -70,6 +70,8 @@ sudo systemctl enable --now nextgen-creator
 ```
 
 Para Nginx, copie `deploy/nginx-locations.conf` para um caminho disponível à configuração e inclua esse arquivo dentro do bloco `server` HTTPS do subdomínio. Se o bloco já define `client_max_body_size`, mantenha uma única diretiva com valor de pelo menos `10m`. Use o certificado TLS existente do subdomínio ou emita-o antes de abrir o app. Mantenha o redirecionamento de HTTP para HTTPS no servidor web. Com outro proxy, replique o encaminhamento de host e protocolo e o limite de upload. Publique somente `staticfiles/` como arquivos estáticos. As thumbs passam pela rota autenticada do Django.
+
+**VPS Nextgen Brasil:** o proxy em produção é o Caddy (`caddy-nextgen.service`), não o Nginx. O bloco do Creator está em `deploy/Caddyfile.creator` e deve ser acrescentado ao `/etc/caddy/Caddyfile.nextgen` existente, preservando todos os demais hosts. Faça backup do arquivo antes, valide com `caddy validate --config /etc/caddy/Caddyfile.nextgen --adapter caddyfile` e aplique com `caddy reload --config /etc/caddy/Caddyfile.nextgen --adapter caddyfile`. A unit em `deploy/nextgen-creator.service` corresponde ao usuário `nextgen-creator` e ao Gunicorn em loopback. O `.env` privado fica em `/opt/nextgen-creator/.env` e o SQLite/refresh token do Calendar em `/var/lib/nextgen-creator`; **não os inclua no Git nem sirva esses diretórios pelo Caddy**. Após atualizar dependências e código, execute `manage.py migrate` como `nextgen-creator` antes de reiniciar o serviço.
 
 ```bash
 sudo install -m 0644 deploy/nginx-locations.conf /etc/nginx/nextgen-creator-locations.conf
@@ -113,7 +115,7 @@ Prossiga após o SQLite responder `ok` e o diretório `thumbs` existir. Preserve
 
 ```bash
 previous="/var/lib/nextgen-creator.previous-$(date +%Y%m%d-%H%M%S)"
-sudo chown -R nextgen:nextgen "$restore"
+sudo chown -R nextgen-creator:nextgen-creator "$restore"
 sudo chmod 0700 "$restore" "$restore/thumbs"
 sudo chmod 0600 "$restore/db.sqlite3"
 sudo systemctl stop nextgen-creator
@@ -141,3 +143,21 @@ Entre no app e confira uma tarefa, seu roteiro e a imagem. Se precisar voltar à
 | 4. Calendar e VPS | Os testes simulam a perda da primeira resposta do Google e verificam que a tentativa seguinte recupera um único evento. Na conta real, conecte a agenda e confirme início, fim, fuso e link. Restaure um backup de teste e abra a tarefa e a imagem recuperadas. |
 
 O fundo fotográfico de Hoje é um asset do projeto inspirado nas referências visuais. A fonte Instrument Sans é servida localmente sob a licença SIL Open Font License, incluída junto ao arquivo.
+
+## Controles de autenticação
+
+O login aceita somente o usuário `phil`; o backend padrão alternativo do Django não é habilitado. Sessões de outras contas deixam de autenticar. A promoção desta versão deve invalidar sessões emitidas pela versão anterior, antes de reabrir o subdomínio:
+
+```bash
+sudo systemctl stop nextgen-creator
+sudo -u nextgen-creator /opt/nextgen-creator/.venv/bin/python manage.py shell -c 'from django.contrib.sessions.models import Session; Session.objects.all().delete()'
+sudo systemctl start nextgen-creator
+```
+
+O login limita falhas a cinco por IP em uma janela de 15 minutos; a quinta falha recebe HTTP 429. Axes persiste os bloqueios no SQLite. Para desbloquear um IP específico, execute no diretório da aplicação:
+
+```bash
+sudo -u nextgen-creator /opt/nextgen-creator/.venv/bin/python manage.py axes_reset_ip 203.0.113.10
+```
+
+Substitua o endereço pelo IP bloqueado. Para zerar todos os bloqueios, use `sudo -u nextgen-creator /opt/nextgen-creator/.venv/bin/python manage.py axes_reset`. Não remova registros de sessão como método de desbloqueio. O IP encaminhado é aceito somente quando a conexão Django chega de loopback; o bloco Caddy desta VPS sobrescreve `X-Forwarded-For` com `{remote_host}`, e o Gunicorn permanece vinculado a loopback.
