@@ -1,0 +1,35 @@
+{% extends 'creator/base.html' %}
+{% block title %}Ideias · Nextgen Creator{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Mural de ideias</h1></div></div>
+<nav class="tabs" aria-label="Estado das ideias">
+  <a href="{% url 'ideas' %}" {% if not archived %}aria-current="page"{% endif %}>Ativas</a>
+  <a href="{% url 'ideas' %}?estado=arquivadas" {% if archived %}aria-current="page"{% endif %}>Arquivadas</a>
+</nav>
+<form class="filter-bar" method="get">
+  {% if archived %}<input type="hidden" name="estado" value="arquivadas">{% endif %}
+  <label>Assunto<select name="assunto">{% include 'creator/tag_options.html' %}</select></label>
+  <button class="button secondary">Filtrar</button>
+  {% if selected_tag %}<a class="text-link" href="{% url 'ideas' %}{% if archived %}?estado=arquivadas{% endif %}">Limpar filtros</a>{% endif %}
+</form>
+<div class="idea-grid">
+  {% for idea in ideas %}
+  <article class="surface post-it">
+    <h2>{{ idea.title }}</h2>
+    {% if idea.note %}<p>{{ idea.note|truncatechars:190 }}</p>{% endif %}
+    {% include 'creator/tags.html' with tags=idea.tags %}
+    <div class="actions">
+      {% if idea.script %}<a class="button primary small" href="{{ idea.script.get_absolute_url }}">Abrir roteiro</a>
+      {% elif not archived %}<a class="button primary small" href="{% url 'idea_convert' idea.pk %}">Criar rascunho</a>{% endif %}
+      <a class="button secondary small" href="{% url 'idea_edit' idea.pk %}?next={{ request.get_full_path|urlencode }}">Editar</a>
+      <form method="post" action="{% url 'idea_archive' idea.pk %}">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="button secondary small" name="restore" value="{% if archived %}1{% else %}0{% endif %}">{% if archived %}Restaurar{% else %}Arquivar{% endif %}</button>
+      </form>
+    </div>
+  </article>
+  {% empty %}
+  <div class="surface empty"><h2>{% if selected_tag %}Nenhuma ideia com esse assunto.{% elif archived %}Nenhuma ideia arquivada.{% else %}Nenhuma ideia no mural.{% endif %}</h2></div>
+  {% endfor %}
+</div>
+{% endblock %}

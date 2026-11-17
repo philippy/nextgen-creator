@@ -1,0 +1,2 @@
+<option value="">Todos os assuntos</option>
+{% for tag in tags %}<option value="{{ tag.key }}" {% if tag.key == selected_tag %}selected{% endif %}>{{ tag.name }}</option>{% endfor %}

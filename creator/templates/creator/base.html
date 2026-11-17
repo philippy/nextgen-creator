@@ -19,14 +19,16 @@
     <nav class="topnav" aria-label="Principal">
       <a href="{% url 'today' %}" {% if section == 'today' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='grid' %} Hoje</a>
       <a href="{% url 'agenda' %}" {% if section == 'agenda' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='calendar' %} Agenda</a>
-      {% block nav_content %}{% endblock %}
+      <a href="{% url 'ideas' %}" {% if section == 'ideas' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='bulb' %} Ideias</a>
+      <a href="{% url 'scripts' %}" {% if section == 'scripts' %}aria-current="page"{% endif %}>{% include 'creator/icon.html' with name='file' %} Roteiros</a>
     </nav>
     <div class="account">
-      {% block quick_action %}{% endblock %}
+      <a class="button quick-idea" href="{% url 'idea_create' %}?next={{ request.get_full_path|urlencode }}">{% include 'creator/icon.html' with name='plus' %} Nova ideia</a>
       <details class="menu">
         <summary class="avatar" aria-label="Mais opções">{{ user.get_username|first|upper }}</summary>
         <div class="menu-panel">
           {% block secondary_nav %}{% endblock %}
+          <a href="{% url 'script_models' %}">{% include 'creator/icon.html' with name='layers' %} Modelos</a>
           <a href="{% url 'preferences' %}">{% include 'creator/icon.html' with name='settings' %} Configurações</a>
           <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>{% include 'creator/icon.html' with name='logout' %} Sair</button></form>
         </div>

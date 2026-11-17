@@ -1,0 +1,19 @@
+{% extends 'creator/base.html' %}
+{% block title %}{{ title }} · Nextgen Creator{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ return_to }}">← Voltar</a>
+<section class="surface form-panel">
+  <div class="page-heading"><h1>{{ title }}</h1>{% if script %}<span class="tag">{{ script.get_status_display }}</span>{% endif %}</div>
+  <form method="post" enctype="multipart/form-data" novalidate data-script-editor data-preview-url="{% url 'script_preview' %}">{% csrf_token %}
+    {% include 'creator/fields.html' %}
+    {% block editor_extra %}{% endblock %}
+    <div class="actions editor-actions">
+      <button class="button primary" name="action" value="save">Salvar</button>
+      <button class="button secondary" type="button" data-preview hidden aria-pressed="false">Prévia</button>
+      {% block script_actions %}{% endblock %}
+    </div>
+    <div class="markdown preview" data-preview-content hidden></div>
+    <p class="errorlist" data-preview-error role="alert" hidden></p>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'creator/base.html' %}
+{% block title %}Roteiros · Nextgen Creator{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Roteiros</h1><a class="button primary" href="{% url 'script_create' %}">{% include 'creator/icon.html' with name='plus' %} Novo roteiro</a></div>
+<nav class="tabs" aria-label="Estado dos roteiros">
+  <a href="{% url 'scripts' %}" {% if not approved %}aria-current="page"{% endif %}>Rascunhos</a>
+  <a href="{% url 'scripts' %}?aba=aprovados" {% if approved %}aria-current="page"{% endif %}>Aprovados</a>
+</nav>
+<form class="filter-bar" method="get">
+  {% if approved %}<input type="hidden" name="aba" value="aprovados">{% endif %}
+  <label>Título<input type="search" name="busca" value="{{ search }}" placeholder="Buscar por título"></label>
+  <label>Assunto<select name="assunto">{% include 'creator/tag_options.html' %}</select></label>
+  <label>Formato<select name="formato"><option value="">Todos os formatos</option>
+    {% for value, name in formats %}<option value="{{ value }}" {% if value == selected_format %}selected{% endif %}>{{ name }}</option>{% endfor %}
+  </select></label>
+  <button class="button secondary">Filtrar</button>
+  {% if has_filters %}<a class="text-link" href="{% url 'scripts' %}{% if approved %}?aba=aprovados{% endif %}">Limpar filtros</a>{% endif %}
+</form>
+<section class="surface">
+  {% for script in scripts %}
+  <article class="script-row">
+    <div><h2><a href="{{ script.get_absolute_url }}">{{ script.title }}</a></h2>
+    <p class="muted">{{ script.get_format_display }} · Editado em {{ script.edited_at|date:"d/m/Y H:i" }}</p>
+    {% include 'creator/tags.html' with tags=script.tags %}</div>
+    <a class="icon-button" href="{{ script.get_absolute_url }}" aria-label="Abrir roteiro {{ script.title }}">{% include 'creator/icon.html' with name='arrow' %}</a>
+  </article>
+  {% empty %}<div class="empty"><h2>Nenhum roteiro encontrado.</h2></div>{% endfor %}
+</section>
+{% endblock %}

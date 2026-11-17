@@ -1,0 +1,7 @@
+<div class="models-list">
+{% for value, name in formats %}
+  <article class="script-row">
+    <h2>{{ name }}</h2><a class="button secondary small" href="{% url 'script_create' %}?modelo={{ value }}" aria-label="Usar modelo {{ name }}">Usar modelo</a>
+  </article>
+{% endfor %}
+</div>

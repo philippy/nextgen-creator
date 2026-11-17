@@ -133,3 +133,30 @@ progress::-moz-progress-bar{background:linear-gradient(90deg,#9890e9,#729dca,#b6
  .metric-grid{gap:5px}.metric{padding:10px}.metric strong{font-size:1.65rem}.metric small{display:block}.login-layout{display:block;margin:24px auto}.login-art{display:none}
  .detail-panel .page-heading{align-items:flex-start;flex-wrap:wrap}
 }
+[hidden]{display:none!important}
+.quick-idea{background:#ddecad;color:#233625}.quick-idea:hover{background:#cbdc92}
+.tabs{display:flex;gap:4px;width:max-content;border-radius:100px;padding:4px;background:#e5ecee;margin-bottom:14px}
+.tabs a{padding:7px 15px;border-radius:100px;font-size:.9rem;font-weight:600}
+.tabs a[aria-current=page]{background:#25373e;color:#fff}
+.filter-bar{display:flex;flex-wrap:wrap;align-items:end;gap:9px;margin-bottom:17px}
+.filter-bar label{display:grid;gap:4px;min-width:148px;font-size:.87rem;font-weight:600}
+.filter-bar .text-link{align-self:center}
+.idea-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:13px}
+.post-it{display:grid;align-content:start;gap:10px;background:#f3f0d8;border-color:#eae6ca;overflow-wrap:anywhere}
+.post-it:nth-child(4n+2){background:#e6eef9;border-color:#dbe5f3}
+.post-it:nth-child(4n+3){background:#eee9f9;border-color:#e5dff4}
+.post-it:nth-child(4n+4){background:#e7efdd;border-color:#dee8d2}
+.post-it .secondary{background:#ffffffa6}
+.tag-list{display:flex;flex-wrap:wrap;gap:5px}
+.post-it .tag{background:#ffffffa6}
+.script-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:14px 0;overflow-wrap:anywhere}
+.script-row:last-child{border-bottom:0}
+.script-row .muted{margin:4px 0 6px}
+.form-panel .page-heading h1{margin-bottom:0}
+.editor-actions{position:sticky;bottom:0;padding:8px 0;background:#fff;z-index:1}
+.markdown{overflow-wrap:anywhere}
+.markdown h2,.markdown h3,.markdown h4{margin:1.15em 0 .5em}
+.markdown p,.markdown ul,.markdown ol{margin:.7em 0}
+.markdown > :first-child{margin-top:0}
+.preview{border:1px solid var(--line);border-radius:10px;background:#f5f8fa;padding:15px;min-height:140px}
+@media(max-width:560px){.quick-idea{font-size:.78rem;padding:7px 9px;min-height:35px}.quick-idea .icon{width:15px;height:15px}.filter-bar label{flex:1 1 135px}.filter-bar .button{align-self:end}.brand{font-size:1rem;gap:5px}}
